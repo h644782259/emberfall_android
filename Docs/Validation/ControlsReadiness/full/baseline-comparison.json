@@ -1,0 +1,17 @@
+[
+  {
+    "name": "returning-counter-production",
+    "baselineAvailable": false,
+    "sameFailureSignature": false
+  },
+  {
+    "name": "practice-action-settlement",
+    "baselineAvailable": false,
+    "sameFailureSignature": false
+  },
+  {
+    "name": "opportunity-channels-round2",
+    "baselineAvailable": false,
+    "sameFailureSignature": false
+  }
+]
