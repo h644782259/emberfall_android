@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "7729f85fa1076532d71242d1430147511eab6055",
+  "baseline": "f3901ea17f69dbefcb4f121c7560767eef4e858f",
+  "files": {
+    "Assets/Editor/AudioValidation.cs": "applicable shared fix; port source delta",
+    "Assets/Editor/InventoryUIValidation.cs": "applicable shared fix; port source delta",
+    "Assets/Editor/MobileValidation.cs": "applicable shared fix; port source delta",
+    "Assets/Editor/RuntimeValidation.cs": "applicable shared fix; port source delta",
+    "Assets/Editor/SummonerValidation.cs": "applicable shared fix; port source delta",
+    "Assets/Editor/TraversalValidation.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/Combat/BlenderSkillVfx.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/Combat/FilledSkillVfx.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/Core/GameAudio.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/Core/ProgressionService.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/UI/MobileControls.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/World/BlenderSceneryArt.cs": "applicable shared fix; port source delta",
+    "Assets/Scripts/World/WorldLabelPresentation.cs": "applicable shared fix; port source delta"
+  }
+}

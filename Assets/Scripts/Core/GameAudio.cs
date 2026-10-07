@@ -416,6 +416,7 @@ namespace Emberfall
 
         private void ResetThrottle()
         {
+            lastImpact = float.NegativeInfinity;
             if (lastPlayed == null) return;
             for (int i = 0; i < lastPlayed.Length; i++) lastPlayed[i] = float.NegativeInfinity;
         }

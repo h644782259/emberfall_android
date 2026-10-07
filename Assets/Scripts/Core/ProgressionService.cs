@@ -1662,6 +1662,7 @@ namespace Emberfall
         private GameProfile Snapshot()
         {
             var copy=JsonUtility.FromJson<GameProfile>(JsonUtility.ToJson(Profile,true));
+            NormalizeEmptyChestDraw(copy);
             if(copy.pendingFashionChest&&pendingChestRoll!=null&&pendingChestRollPath==SaveFilePath&&pendingChestRollClears==copy.clearedRuns&&pendingChestRollTier==copy.pendingChestTier)
             {
                 copy.pendingChestDraw=CopyChestRoll(pendingChestRoll);copy.chestRulesRevision=2;
@@ -2818,6 +2819,22 @@ namespace Emberfall
             var match=System.Text.RegularExpressions.Regex.Match(document??string.Empty,@"(?<!\\)""pendingChestDraw""\s*:\s*(?<token>null|[^ \t\r\n])");
             return match.Success&&match.Groups["token"].Value!="null";
         }
+        // Unity serializes a null inline class as this exact empty placeholder.
+        // A real frozen roll has an ID and revision; never discard partially populated records.
+        private static void NormalizeEmptyChestDraw(GameProfile profile)
+        {
+            if (profile == null) return;
+            ChestReward draw = profile.pendingChestDraw;
+            if (draw != null && draw.rulesRevision == 0 && !draw.hasCurrencyDeltas &&
+                draw.goldDelta == 0 && draw.threadsDelta == 0 && draw.materialsDelta == 0 &&
+                (int)draw.rewardKind == 0 && (int)draw.materialKind == 0 && draw.materials == 0 &&
+                draw.baseGold == 0 && draw.duplicateGold == 0 && draw.baseThreads == 0 && draw.duplicateThreads == 0 &&
+                !draw.legacyGoldProtection && string.IsNullOrEmpty(draw.id) && draw.choice == 0 && draw.gold == 0 &&
+                draw.rarityIndex == -1 && draw.slotIndex == -1 && string.IsNullOrEmpty(draw.name) &&
+                !draw.duplicate && string.IsNullOrEmpty(draw.summary))
+                profile.pendingChestDraw = null;
+        }
+
         private static bool TryReadProfile(string path, out GameProfile profile, out string error)
         {
             profile = null;
@@ -2829,6 +2846,7 @@ namespace Emberfall
                 if (!TryReadSaveDocument(path, out document, out error, true)) return false;
                 frozenRecord=HasFrozenRewardDocument(document);
                 SaveFile data = JsonUtility.FromJson<SaveFile>(document);
+                if (data != null) NormalizeEmptyChestDraw(data.profile);
                 frozenRecord=frozenRecord||(data!=null&&data.profile!=null&&data.profile.pendingChestDraw!=null);
                 if(data!=null&&data.format==SaveFormat&&(data.version>3||data.profile!=null&&(data.profile.version>1||data.profile.classStateRevision>1||data.profile.chestRulesRevision>2||data.profile.pendingChestRulesRevision>2||data.profile.pendingChestDraw!=null&&data.profile.pendingChestDraw.rulesRevision>2)))
                 {error="future format";return false;}
@@ -2893,6 +2911,7 @@ namespace Emberfall
 
         private static int ValidateProfile(GameProfile profile)
         {
+            NormalizeEmptyChestDraw(profile);
             int refundedRanks = 0;
             EnsureBuildPresetSlots(profile);
             if (!Enum.IsDefined(typeof(HeroClass), profile.heroClass)) profile.heroClass = HeroClass.Vanguard;
