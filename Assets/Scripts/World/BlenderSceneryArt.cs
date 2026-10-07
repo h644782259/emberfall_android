@@ -23,6 +23,8 @@ namespace Emberfall
             if(!HasSafeGeometry(source))return null;
             GameObject instance=Object.Instantiate(source,parent,false);
             instance.transform.localPosition=position;
+            // Authored meshes already use meters; discard the FBX root unit-conversion scale.
+            instance.transform.localScale=Vector3.one;
             foreach(MeshRenderer renderer in instance.GetComponentsInChildren<MeshRenderer>(true))
             {
                 if(!renderer.enabled||!LocallyActive(renderer.transform,instance.transform))continue;
