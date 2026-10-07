@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored /tmp/android-source-validation-fbecp05_/android-runtime-compile/Validation.csproj (in 125 ms).
+  Validation -> /tmp/android-source-validation-fbecp05_/android-runtime-compile/bin/Release/net8.0/Validation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.17

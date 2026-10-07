@@ -1,0 +1,124 @@
+FAIL full-source-inventory
+PASS android-configuration
+PASS pinned-api-references
+PASS: 56 pause-state assertions
+PASS application-pause-state
+PASS: 2621497 Android lifecycle state assertions (65536 callback sequences)
+PASS android-lifecycle
+PASS: 7 font resolver ownership/platform checks (managed API fixture, no glyph rasterization)
+PASS game-font-android
+PASS 18 actual Android build entry control-flow assertions; Unity/BuildPipeline API boundaries are managed shims, no APK built
+PASS android-build-entry
+PASS: Android lifecycle production wiring (background UI, viewport, Back priority, save/audio transitions)
+PASS android-lifecycle-source
+/tmp/emberfall-touch-replay-t16z218i/Replay.cs(53,36): warning CS0414: The field 'MobileControls.worldPointerTarget' is assigned but its value is never used [/tmp/emberfall-touch-replay-t16z218i/project/Validation.csproj]
+/tmp/emberfall-touch-replay-t16z218i/Replay.cs(53,18): warning CS0414: The field 'MobileControls.worldPointerOwner' is assigned but its value is never used [/tmp/emberfall-touch-replay-t16z218i/project/Validation.csproj]
+
+Build succeeded.
+
+/tmp/emberfall-touch-replay-t16z218i/Replay.cs(53,36): warning CS0414: The field 'MobileControls.worldPointerTarget' is assigned but its value is never used [/tmp/emberfall-touch-replay-t16z218i/project/Validation.csproj]
+/tmp/emberfall-touch-replay-t16z218i/Replay.cs(53,18): warning CS0414: The field 'MobileControls.worldPointerOwner' is assigned but its value is never used [/tmp/emberfall-touch-replay-t16z218i/project/Validation.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.47
+PASS: 26 production multi-pointer lifecycle assertions (11/12/13 at 1s and 110s)
+PASS production-touch-lifecycle
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.44
+PASS 14 actual mobile pause transition assertions
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.37
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.38
+Unhandled exception. System.Exception: near enemy preserves pause
+   at Emberfall.Program.Check(Boolean v, String why) in /tmp/mobile-pause-transitions-b8xs2e8b/Program.cs:line 64
+   at Emberfall.Program.Main() in /tmp/mobile-pause-transitions-b8xs2e8b/Program.cs:line 65
+
+PASS compiled old-behavior negative: near enemy preserves pause
+Unhandled exception. System.Exception: already dungeon preserves pause
+   at Emberfall.Program.Check(Boolean v, String why) in /tmp/mobile-pause-transitions-b8xs2e8b/Program.cs:line 64
+   at Emberfall.Program.Main() in /tmp/mobile-pause-transitions-b8xs2e8b/Program.cs:line 71
+
+PASS compiled old-behavior negative: already dungeon preserves pause
+PASS mobile-pause-transition
+/tmp/inventory-back-oureluba/project/Program.cs(11,31): warning CS0649: Field 'GameUI.bindingReturnPanel' is never assigned to, and will always have its default value [/tmp/inventory-back-oureluba/project/Validation.csproj]
+/tmp/inventory-back-oureluba/project/Program.cs(13,26): warning CS0414: The field 'GameUI.rebindingSlot' is assigned but its value is never used [/tmp/inventory-back-oureluba/project/Validation.csproj]
+
+Build succeeded.
+
+/tmp/inventory-back-oureluba/project/Program.cs(11,31): warning CS0649: Field 'GameUI.bindingReturnPanel' is never assigned to, and will always have its default value [/tmp/inventory-back-oureluba/project/Validation.csproj]
+/tmp/inventory-back-oureluba/project/Program.cs(13,26): warning CS0414: The field 'GameUI.rebindingSlot' is assigned but its value is never used [/tmp/inventory-back-oureluba/project/Validation.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.48
+PASS: 106 production inventory ClosePanel assertions
+/tmp/inventory-back-98yg265g/project/Program.cs(11,31): warning CS0649: Field 'GameUI.bindingReturnPanel' is never assigned to, and will always have its default value [/tmp/inventory-back-98yg265g/project/Validation.csproj]
+/tmp/inventory-back-98yg265g/project/Program.cs(13,26): warning CS0414: The field 'GameUI.rebindingSlot' is assigned but its value is never used [/tmp/inventory-back-98yg265g/project/Validation.csproj]
+
+Build succeeded.
+
+/tmp/inventory-back-98yg265g/project/Program.cs(11,31): warning CS0649: Field 'GameUI.bindingReturnPanel' is never assigned to, and will always have its default value [/tmp/inventory-back-98yg265g/project/Validation.csproj]
+/tmp/inventory-back-98yg265g/project/Program.cs(13,26): warning CS0414: The field 'GameUI.rebindingSlot' is assigned but its value is never used [/tmp/inventory-back-98yg265g/project/Validation.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.49
+PASS: mandatory legacy negative control compiled, then failed precisely at first-Back combat-blocking assertion
+PASS mobile-inventory-back
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.45
+PASS: 828 actual ProcessPointer/IsScreenPointOverControls assertions, 12 areas x 3 presets; opportunity observations and Unity are explicit boundaries
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.32
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.21
+Unhandled exception. System.Exception: visible hint never changes pin or combat state
+   at MobileOpportunityInputProductionTests.C(Boolean value, String text) in /tmp/opportunity-input-gvsl3q6o/OpportunityProbe.cs:line 4
+   at MobileOpportunityInputProductionTests.Run() in /tmp/opportunity-input-gvsl3q6o/OpportunityProbe.cs:line 21
+   at Program.<Main>$(String[] args) in /tmp/opportunity-input-gvsl3q6o/Program.cs:line 1
+
+PASS compiled negative: visible hint never changes pin or combat state
+Unhandled exception. System.Exception: visible hint is reported as UI control
+   at MobileOpportunityInputProductionTests.C(Boolean value, String text) in /tmp/opportunity-input-gvsl3q6o/OpportunityProbe.cs:line 4
+   at MobileOpportunityInputProductionTests.Run() in /tmp/opportunity-input-gvsl3q6o/OpportunityProbe.cs:line 17
+   at Program.<Main>$(String[] args) in /tmp/opportunity-input-gvsl3q6o/Program.cs:line 1
+
+PASS compiled negative: visible hint is reported as UI control
+PASS mobile-opportunity-input
+  Determining projects to restore...
+  Restored /tmp/android-source-validation-dwlzmks5/android-runtime-compile/Validation.csproj (in 88 ms).
+  Validation -> /tmp/android-source-validation-dwlzmks5/android-runtime-compile/bin/Release/net8.0/Validation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.82
+PASS android-runtime-compile
+Android source checks: False 13

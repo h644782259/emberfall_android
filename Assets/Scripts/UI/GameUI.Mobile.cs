@@ -1,0 +1,283 @@
+using UnityEngine;
+
+namespace Emberfall
+{
+    public sealed partial class GameUI
+    {
+        private readonly MobileSkillTap mobileTap=new MobileSkillTap();
+        private int mobileCastFinger {get{return mobileTap.Finger;}}
+        private float TouchRatio { get { return MobileControls.Layout.Scale/scale; } }
+        private Rect TouchRect(MobileControlLayout.Area a) { float r=TouchRatio;return new Rect(a.X*r,a.Y*r,a.Width*r,a.Height*r); }
+        private Rect TouchRect(float x,float y,float w,float h) { return TouchRect(new MobileControlLayout.Area(x,y,w,h)); }
+        private int TouchFont(float size) { return Mathf.RoundToInt(size*TouchRatio); }
+        private bool MobileButton(MobileControlLayout.Area area,string label,Color color)
+        { Rect r=TouchRect(area);blockedRects.Add(r);return Button(r,label,color); }
+        private bool MobileIcon(MobileControlLayout.Area area,string icon,Color color)
+        { Rect r=TouchRect(area);blockedRects.Add(r);return IconButton(r,icon,"","",color); }
+
+        public void CancelMobileCast(){mobileTap.Cancel();}
+        private bool BeginMobileCast(int finger,Vector2 screen)
+        {
+            if(mobileTap.Active||session.InputBlocked||panel!=Panel.None||session.Player==null)return false;
+            Vector2 p=ScreenToUI(screen);
+            for(int i=0;i<MobileSkillPolicy.ButtonCount;i++)
+            {
+                if(!hotbarSlots[i].Contains(p))continue;
+                int skill=MobileSkillPolicy.SkillAtButton(i);
+                if(session.Progression.Profile.skillRanks[skill]<=0||!MobileSkillPolicy.IsActiveSkill(skill))return true;
+                mobileTap.Begin(finger,skill);return true;
+            }
+            return false;
+        }
+        private void ContinueMobileCast(int finger,Vector2 screen,bool ended,bool cancelled)
+        {
+            if(finger!=mobileTap.Finger)return;
+            if(cancelled||!MobileControls.SafeArea.Contains(screen)||session.InputBlocked||panel!=Panel.None||session.Player==null)
+            {CancelMobileCast();return;}
+            if(!ended)return;
+            bool inside=false;Vector2 point=ScreenToUI(screen);
+            for(int i=0;i<MobileSkillPolicy.ButtonCount;i++)if(hotbarSlots[i].Contains(point)&&MobileSkillPolicy.SkillAtButton(i)==mobileTap.Skill)inside=true;
+            int skill;
+            if(mobileTap.Release(finger,inside,false,out skill))
+            {var targeting=session.Player.GetComponent<SkillTargetingController>();
+                if(targeting!=null&&!targeting.Begin(skill))
+                {if(string.IsNullOrEmpty(session.ControlFailure("skill"+skill)))session.ReportControlFailure("skill"+skill,"暂不可用");}}
+        }
+        private bool CanMobileInteract {get{return session!=null&&!session.PracticeActive&&!session.InputBlocked&&!session.DungeonSelectionOpen&&(session.NearChapterExit||session.NearRoomExit||session.SideEventAvailable||session.NearbyHubNpc!=HubNpcKind.None||session.IsInCamp||session.InDungeon||session.IsNearDungeonEntrance);}}
+        public void ActivateMobileInteraction(int triggeringFinger=TouchReleaseLatch.AnyPointer)
+        {
+            if(!CanMobileInteract||UITransitionBlocked)return;
+            try
+            {
+                if(session.NearChapterExit)session.EnterNextChapterRoom();
+                else if(session.NearRoomExit)session.EnterNextRoom();
+                else if(session.SideEventAvailable)session.StartSideEvent();
+                else if(session.NearbyHubNpc!=HubNpcKind.None)OpenNearbyHubNpc();
+                else if(session.IsInCamp){panel=Panel.Camp;session.SetUIBlocking(true);}
+                else if(session.InDungeon)session.ReturnToCamp();
+                else session.EnterDungeon();
+            }
+            finally{BlockUITransitionForFinger(triggeringFinger);}
+        }
+        private void LeaveMobilePauseForCamp()
+        {
+            bool paused=session.Paused, practice=session.PracticeActive, completed=false;
+            var player=session.Player;
+            int epoch=player==null?0:player.CombatEpoch;
+            try
+            {
+                session.ReturnToCamp();
+                completed=session.Player!=player || player!=null&&player.CombatEpoch!=epoch || practice&&!session.PracticeActive;
+            }
+            finally { session.SetPaused(completed?false:paused); }
+        }
+        private void LeaveMobilePauseForDungeon()
+        {
+            bool paused=session.Paused, completed=false;
+            try
+            {
+                session.SetPaused(false);
+                session.EnterDungeon();
+                completed=session.DungeonSelectionOpen;
+            }
+            finally { if(!completed)session.SetPaused(paused); }
+        }
+        private void DrawMobileHUD()
+        {
+            var l=MobileControls.Layout;GameProfile p=session.Progression.Profile;
+            Color accent=GameBalance.ClassColor(p.heroClass);
+            Rect status=TouchRect(12,12,175,58);blockedRects.Add(status);Box(status,accent,false);
+            Text(TouchRect(22,17,68,18),GameBalance.ClassName(p.heroClass)+" "+p.level,TouchFont(12),pale,true);
+            float hp=session.Player==null?0:session.Player.Health,max=session.Player==null?1:session.Player.MaxHealth;
+            Text(TouchRect(90,17,87,18),Mathf.CeilToInt(hp)+"/"+Mathf.CeilToInt(max),TouchFont(11),pale,true,false,TextAnchor.MiddleRight);
+            Bar(TouchRect(22,39,155,8),hp/Mathf.Max(1,max),jade);
+            Bar(TouchRect(22,52,155,5),session.Player==null?0:session.Player.Energy/Mathf.Max(1,session.Player.MaxEnergy),new Color(.35f,.63f,1));
+            if(MobileIcon(l.Inventory,"inventory",jade))TogglePanel(Panel.Inventory);
+            if(MobileIcon(l.SkillsMenu,"skills",p.skillPoints>0?gold:jade))TogglePanel(Panel.Skills);
+            if(MobileIcon(l.Menu,"pause",muted))session.SetPaused(true);
+            Rect map=TouchRect(l.Width*.5f-44,12,88,60);
+            string growthTitle,growthStep;
+            if(session.ChapterActive||session.SpecialAdventure)DrawMobileModeStatus(session.ChapterActive||session.RoomChainRun!=null||session.ModeRun!=null&&session.ModeRun.Mode==ExpeditionModeKind.HoldPoint?TouchRect(l.AdventureStatus):TouchRect(l.Width*.5f-86,12,172,58));
+            else if(TryGrowthHudHint(out growthTitle,out growthStep))
+            {
+                Rect goal=TouchRect(l.AdventureStatus);blockedRects.Add(goal);Box(goal,jade,false);
+                Text(new Rect(goal.x+6*TouchRatio,goal.y+4*TouchRatio,goal.width-12*TouchRatio,20*TouchRatio),growthTitle,TouchFont(11),gold,true,true);
+                Text(new Rect(goal.x+6*TouchRatio,goal.y+25*TouchRatio,goal.width-12*TouchRatio,46*TouchRatio),growthStep,TouchFont(10),pale,false,true);
+            }
+            else
+            {
+                blockedRects.Add(map);Box(map,jade,false);DrawMinimapTerrain(map);
+                if(!session.InDungeon)
+                {
+                    MapDot(map,new Vector3(0,0,11),jade,5*TouchRatio);
+                    for(int npc=0;npc<3;npc++)MapDot(map,GameSession.HubNpcPosition(npc),gold,3*TouchRatio);
+                }
+                else MapDot(map,new Vector3(0,0,-16),jade,5*TouchRatio);
+                if(session.Player!=null)MapDot(map,session.Player.transform.position,jade,4*TouchRatio);
+                foreach(var enemy in session.Enemies)if(enemy!=null&&!enemy.IsDead)MapDot(map,enemy.transform.position,enemy.IsBoss?gold:new Color(1,.4f,.3f),2*TouchRatio);
+                if(GUI.Button(map,GUIContent.none,invisibleButton))OpenTravelMap();
+            }
+            if(session.InDungeon&&!session.SpecialAdventure)
+            {blockedRects.Add(TouchRect(l.EncounterText));Text(TouchRect(l.EncounterText),session.DungeonCleared?"遗迹肃清":"第 "+session.DungeonWave+" / "+session.TotalWaves+" 波",TouchFont(12),pale,true,false,TextAnchor.MiddleCenter);}
+            DrawMobileHotbar();
+            DrawCompanionCommands();
+            Text(TouchRect(22,71,155,11),CurrentCombatResult(),TouchFont(9),pale,true);
+            string interaction=session.NearChapterExit?"沿星路前进":session.NearRoomExit?"进入下一间":session.SideEventAvailable?"晶核挑战":session.NearbyHubNpc!=HubNpcKind.None?HubNpcMobileLabel(session.NearbyHubNpc):session.IsInCamp?"营地工坊":session.InDungeon?"返回营地":session.IsNearDungeonEntrance?"进入副本":"靠近入口";
+            Rect interact=TouchRect(l.Interact);blockedRects.Add(interact);
+            // One pointer owner handles real touches and simulated/attached mice.
+            // This is presentation only: a second IMGUI Button here would dispatch
+            // again after a room transition changed the context on pointer release.
+            Box(interact,CanMobileInteract?gold:muted,false);
+            Text(interact,interaction,TouchFont(12),CanMobileInteract?gold:muted,true,false,TextAnchor.MiddleCenter);
+            Badge(interact,Attention.Rewards&&session.IsInCamp);
+            EnemyController boss=null;foreach(var e in session.Enemies)if(e!=null&&e.IsBoss&&!e.IsDead){boss=e;break;}
+            if(boss!=null){blockedRects.Add(TouchRect(l.BossHealth));Bar(TouchRect(l.BossHealth),boss.Health/Mathf.Max(1,boss.MaxHealth),new Color(.93f,.34f,.29f));}
+            var targeting=session.Player==null?null:session.Player.GetComponent<SkillTargetingController>();
+            var charge=session.Player==null?null:session.Player.GetComponent<SkillChargeController>();
+            if(charge!=null&&charge.IsCharging)Bar(TouchRect(26,l.Height-12,128,5),charge.Progress,gold);
+        }
+        private void DrawMobileHotbar()
+        {
+            float priorOpacity=controlOpacity;controlOpacity=EffectPreferences.TouchOpacity;
+            var l=MobileControls.Layout;GameProfile p=session.Progression.Profile;
+            for(int i=0;i<MobileSkillPolicy.ButtonCount;i++)
+            {
+                Rect hit=hotbarSlots[i];blockedRects.Add(hit);Rect r=MobileVisualRect(hit);int skill=MobileSkillPolicy.SkillAtButton(i);bool learned=p.skillRanks[skill]>0;bool passive=GameBalance.IsPassive(skill);
+                Fill(r,new Color(.035f,.075f,.105f,.92f));Border(r,!learned?muted*.25f:GameBalance.ClassColor(p.heroClass));
+                float iconSize=Mathf.Min(r.width-4*TouchRatio,Mathf.Min(r.height-17*TouchRatio,30*TouchRatio));DrawSkillIdentity(new Rect(r.center.x-iconSize*.5f,r.y+TouchRatio,iconSize,iconSize),p.heroClass,skill,p.skillRanks[skill],learned,iconSize/TouchRatio<=24?24:32);
+                if(passive||!learned)Text(new Rect(r.x,r.yMax-15*TouchRatio,r.width,15*TouchRatio),passive?"被动":"Lv."+GameBalance.SkillRequiredLevels[skill],TouchFont(9),passive?new Color(.8f,.7f,1):muted,true,false,TextAnchor.MiddleCenter);
+                DrawMobileSkillAvailability(r,skill);
+                if(mobileTap.Skill==skill&&mobileTap.Active)Border(r,gold,2*TouchRatio);
+            }
+            controlOpacity=priorOpacity;
+        }
+        private string mobileNoticeDetail;
+        private Vector2 mobileNoticeScroll;
+        private void DrawMobileBattleNotice()
+        {
+            var area=MobileControls.Layout.Notice;
+            Rect r=TouchRect(area);blockedRects.Add(r);
+            Box(r,gold,false);
+            Text(TouchRect(area.X+7,area.Y+6,area.Width-14,area.Height-30),PlatformText(session.Notification),TouchFont(12),pale,false,true);
+            Text(TouchRect(area.X+7,area.Y+area.Height-21,area.Width-14,16),"轻触查看完整提示",TouchFont(10),gold,false,false,TextAnchor.MiddleCenter);
+            if(GUI.Button(r,GUIContent.none,invisibleButton))
+            {
+                mobileNoticeDetail=PlatformText(session.Notification);mobileNoticeScroll=Vector2.zero;
+                panel=Panel.Notice;session.SetUIBlocking(true);CancelMobileScroll();BlockUITransition();
+            }
+        }
+        private void DrawMobileNotice()
+        {
+            var layout=DrawMobileDialogChrome("冒险提示",gold);
+            float contentWidth=layout.Body.Width-18;
+            float contentHeight=MeasureMobileParagraph(mobileNoticeDetail,contentWidth-16,16)+16;
+            mobileNoticeScroll=BeginTouchScroll("mobile-notice",MobilePanelRect(layout.Body),mobileNoticeScroll,
+                new Rect(0,0,contentWidth*TouchRatio,Mathf.Max(layout.Body.Height,contentHeight)*TouchRatio));
+            DrawMobileParagraph(8,8,contentWidth-16,mobileNoticeDetail,16,pale);
+            EndTouchScroll();
+            if(Button(MobilePanelRect(layout.FooterButton(0,1)),"返回冒险",jade))
+            {ClosePanel();BlockUITransition();}
+        }
+        private void DrawMobileTitle()
+        {
+            if(saveSlotsDirty)RefreshSaveSlots();var l=MobileControls.Layout;
+            Fill(new Rect(0,0,width,height),new Color(.018f,.029f,.048f,1));
+            float x=(l.Width-528)/2,y=(l.Height-300)/2;
+            Text(TouchRect(x,y,528,30),"星烬纪元",TouchFont(25),pale,true);
+            Text(TouchRect(x,y+31,528,16),"初选职业可在安全营地自由切换",TouchFont(11),muted);
+            for(int i=0;i<4;i++)
+            {
+                var hero=(HeroClass)i;Color tint=GameBalance.ClassColor(hero);Rect r=TouchRect(x+i*134,y+50,126,166);
+                Fill(r,new Color(.055f,.09f,.13f));Border(r,selectedClass==hero?gold:tint*.45f,selectedClass==hero?2:1);
+                DrawCrest(TouchRect(x+i*134+26,y+68,74,78),hero,tint);
+                Text(TouchRect(x+i*134+5,y+166,116,31),GameBalance.ClassName(hero),TouchFont(18),pale,true,false,TextAnchor.MiddleCenter);
+                if(GUI.Button(r,GUIContent.none,invisibleButton))selectedClass=hero;
+            }
+            if(Button(TouchRect(x,y+237,254,52),"选择角色存档",jade,saveSlots.Count>0))OpenSaveSelection();
+            if(Button(TouchRect(x+274,y+237,254,52),"新建冒险",gold))StartSelectedHero();
+            if(!string.IsNullOrEmpty(session.Progression.LastError))Text(TouchRect(x,y+291,528,22),session.Progression.LastError,TouchFont(11),gold);
+        }
+        private void DrawMobileSaveSelection()
+        {
+            var l=MobileControls.Layout;float x=(l.Width-520)/2,y=12;
+            Fill(new Rect(0,0,width,height),new Color(.018f,.029f,.048f,1));
+            Text(TouchRect(x,y,520,30),"角色存档  ·  "+saveSlots.Count,TouchFont(21),pale,true);
+            Rect viewport=TouchRect(x,y+42,520,l.Height-135);float ratio=TouchRatio;
+            if(mobileSaveSelectionIssue!=saveSelectionError)
+            {mobileSaveSelectionIssue=saveSelectionError;if(!string.IsNullOrEmpty(saveSelectionError)){CancelMobileScroll();saveSelectionScroll=Vector2.zero;}}
+            float issueHeight=string.IsNullOrEmpty(saveSelectionError)?0:MeasureMobileParagraph(saveSelectionError,478,14,true)+16;
+            saveSelectionScroll=BeginTouchScroll("mobile-saves",viewport,saveSelectionScroll,new Rect(0,0,500*ratio,Mathf.Max(viewport.height,(issueHeight+saveSlots.Count*68)*ratio)));
+            if(issueHeight>0)DrawMobileParagraph(10,6,478,saveSelectionError,14,gold,true);
+            for(int i=0;i<saveSlots.Count;i++)
+            {
+                var slot=saveSlots[i];Rect r=new Rect(0,(issueHeight+i*68)*ratio,498*ratio,60*ratio);
+                Fill(r,card);Border(r,selectedSaveId==slot.Id?gold:jade*.35f);
+                Text(new Rect(12*ratio,r.y+7*ratio,320*ratio,23*ratio),slot.DisplayName,TouchFont(16),pale,true);
+                string id=slot.Id=="legacy"?"旧存档":slot.Id.Substring(0,8);
+                Text(new Rect(12*ratio,r.y+34*ratio,470*ratio,19*ratio),id+"  ·  "+(slot.SavedAtUtc==System.DateTime.MinValue?"时间未知":slot.SavedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))+(slot.DeletionPending?"  删除未完成":""),TouchFont(12),muted);
+                if(GUI.Button(r,GUIContent.none,invisibleButton)){selectedSaveId=slot.Id;saveSelectionError=null;}
+            }
+            EndTouchScroll();
+            float bottom=l.Height-62;
+            if(Button(TouchRect(x,bottom,110,48),"返回",jade))ClosePanel();
+            if(Button(TouchRect(x+122,bottom,100,48),"刷新",muted))RefreshSaveSlots();
+            DrawDeleteSaveButton(TouchRect(x+234,bottom,130,48));
+            if(Button(TouchRect(x+376,bottom,144,48),"读取角色",gold,saveSlots.Exists(a=>a.Id==selectedSaveId&&a.CanLoad)))ContinueSelectedSave();
+        }
+        private string mobileSaveSelectionIssue;
+        private void DrawMobileGuide()
+        {
+            var l=MobileControls.Layout;float x=(l.Width-510)/2,y=(l.Height-300)/2;
+            Fill(new Rect(0,0,width,height),new Color(.018f,.029f,.048f,1));
+            Text(TouchRect(x,y,510,30),"触屏操作",TouchFont(22),pale,true);
+            string[] tips={"左侧拖动移动 · 右下按住普攻，可同时操作", "右侧固定10个位置；被动自动生效，无须翻页", "轻点技能自动瞄准并施放，无须圈选或二次确认", "点敌人固定目标；点战场空白取消，恢复自动瞄准", "蓄力自动完成；点取消或闪避可中断", "灰色技能尚未学会；到技能树学习后直接可用"};
+            for(int i=0;i<tips.Length;i++)Text(TouchRect(x,y+43+i*32,510,28),tips[i],TouchFont(14),i==2?jade:pale);
+            if(Button(TouchRect(x,y+250,510,48),controlsReturnPause?"返回暂停菜单":"返回冒险",jade))ClosePanel();
+        }
+        private int mobilePausePage;
+        private void DrawMobilePause()
+        {
+            var layout = MobileControls.Layout;
+            float x = (layout.Width - 520) * .5f, y = (layout.Height - 306) * .5f;
+            Fill(new Rect(0, 0, width, height), new Color(.012f, .025f, .04f, .94f));
+            Text(TouchRect(x + 12, y + 3, 342, 31), "冒险暂停", TouchFont(23), pale, true);
+            if (Button(TouchRect(x + 374, y, 134, 44), mobilePausePage == 0 ? "更多设置 ›" : mobilePausePage==1?"触控布局 ›":"‹ 返回", jade))
+            { mobilePausePage = (mobilePausePage+1)%3; BlockUITransition(); }
+            if(mobilePausePage==2){DrawMobileControlPreferences(x,y);return;}
+            if (mobilePausePage == 1)
+            {
+                string[] extra = { "存档位置", "声音：" + (GameAudio.Muted ? "关" : "开"), "飘字：" + (EffectPreferences.CombatTextScale > 1.5f ? "大" : "标准"),
+                    "镜头反馈：" + (EffectPreferences.CameraShake ? "开" : "关"), "特效：" + (EffectPreferences.ReducedEffects ? "精简" : "完整"), "操作指南" };
+                for (int i = 0; i < extra.Length; i++)
+                    if (Button(TouchRect(x + 12 + (i % 2) * 256, y + 57 + (i / 2) * 58, 240, 48), extra[i], jade))
+                    {
+                        if (i == 0) { saveReturnPause = true; panel = Panel.SaveLocation; session.SetUIBlocking(true); session.SetPaused(false); }
+                        else if (i == 1) GameAudio.Muted = !GameAudio.Muted;
+                        else if (i == 2) EffectPreferences.CombatTextScale = EffectPreferences.CombatTextScale > 1.5f ? 1.25f : 1.8f;
+                        else if (i == 3) EffectPreferences.CameraShake = !EffectPreferences.CameraShake;
+                        else if (i == 4) EffectPreferences.EffectsScale = EffectPreferences.ReducedEffects ? 1f : .35f;
+                        else OpenControls();
+                    }
+                Text(TouchRect(x + 12, y + 245, 496, 39), string.IsNullOrEmpty(session.Notification)?"自动保存持续写入当前角色。\n如需手动保存，请返回上一页点击「保存」。":PlatformText(session.Notification), TouchFont(12), string.IsNullOrEmpty(session.Notification)?muted:gold, false, true);
+                return;
+            }
+            string[] labels = { "继续冒险", "保存", "读取存档", "返回主菜单", "营地 / 撤离", "前往遗迹", "城镇旅行地图", "操作指南" };
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (!Button(TouchRect(x + 12 + (i % 2) * 256, y + 51 + (i / 2) * 58, 240, 48), labels[i], i == 0 ? gold : jade)) continue;
+                switch (i)
+                {
+                    case 0: session.SetPaused(false); break;
+                    case 1: RequestManualSave(); break;
+                    case 2: OpenSaveSelection(); break;
+                    case 3: RequestExit(true); break;
+                    case 4: LeaveMobilePauseForCamp(); break;
+                    case 5: LeaveMobilePauseForDungeon(); break;
+                    case 6: OpenTravelMap(); break;
+                    case 7: OpenControls(); break;
+                }
+            }
+            Text(TouchRect(x + 12, y + 280, 496, 18), string.IsNullOrEmpty(session.Notification)?"自动保存持续写入「" + ActiveCharacterName() + "」":PlatformText(session.Notification), TouchFont(11), string.IsNullOrEmpty(session.Notification)?muted:gold, false, false, TextAnchor.MiddleCenter);
+        }
+    }
+}

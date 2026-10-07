@@ -1,0 +1,1 @@
+PASS 18 actual Android build entry control-flow assertions; Unity/BuildPipeline API boundaries are managed shims, no APK built
