@@ -1,0 +1,23 @@
+{
+  "Evidence/android-build-entry.log": "f2b7dd45ec87cb3a06daf5a5e6831df4297aae549e66733d698ca5054f3cc772",
+  "Evidence/android-configuration.log": "776270b9ae28473d6403fadf206ef13dc8f4141ecfe092dc1efdcc84051980b1",
+  "Evidence/android-lifecycle-source.log": "94603b3b33e5094cf734063ec56f4a4055ef7be60177bf5a56eabdee6b25fdff",
+  "Evidence/android-lifecycle.log": "eb4b908a6402adc9c65066ddf538cd6b09cdfc56d3e69f595a850f3ec5bb01fd",
+  "Evidence/android-runtime-compile.log": "53563b93a0b18772f3e5e7e79cddbadfb2aa3f7a9ec055aaebe5ec9b9cdfa7f5",
+  "Evidence/application-pause-state.log": "9dfed6413bf2b691c3d636bce43fd2af297ccfc9f5e63d14af6ddcf22b68f0cb",
+  "Evidence/editor-assembly-boundary.log": "c449bd3a78d8b551d1f99c5006adb10f5da4dd02ba988596d5bcbe5ead695c76",
+  "Evidence/exit-code.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "Evidence/full-source-inventory.log": "dacabbfc7154377a3708a99ee8f13719c38fd0287ecf65c429223ad7a75a3614",
+  "Evidence/game-font-android.log": "b7e7d85982db6830406d7ad9fd828c69366950220d26586bc1e36d7ec5c482a3",
+  "Evidence/mobile-inventory-back.log": "4a242719c293d5cef1e61fb11751cf43032b6f9849328f3489e3d43c732c2f82",
+  "Evidence/mobile-opportunity-input.log": "e105c5a7f4946ee8054aac22b8fbbe84d33d2d276c818d53f3f22609076e3b0a",
+  "Evidence/mobile-pause-transition.log": "ee6b8e2bf32c82bf25eca1e1194378149134fdc8312d4e104d3102643d614926",
+  "Evidence/pinned-api-references.log": "4eaf9a3368d6f709287f500eded7a90d53ad672895305b9fde20757e0df4aaad",
+  "Evidence/production-touch-lifecycle.log": "46237209972d50d1c6a103af90cd231e5db169dc65b85cd1b3e0933c5433feb5",
+  "Evidence/real-font-resource.log": "a6e8738d743e8823a72d1f2030f5781ea30d42bc88b923f9a4c012814e6594f1",
+  "Evidence/report.json": "b0301b37904606fa0db1279da11124c964f083ff1c38140e6d09928b3122a261",
+  "Evidence/terminal.log": "c3ae1b85a85dcf29411bb3e1f2e0810b7a98227ce63a9fb565c70a563c12b042",
+  "README.md": "7860ba9078021ab3df8a17a83b2d36febc17610391f34a8e8962777826864c99",
+  "provenance.json": "af50dc44caf6052b1e07678d001570a667e8a1b9170fcb90107c4a332fc716f7",
+  "verify-evidence.py": "adddbbbf3143d2a18d40ea61dd0622cff7d2a4fa3368909641580b5871612ba5"
+}

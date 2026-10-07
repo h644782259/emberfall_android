@@ -6,7 +6,7 @@ from datetime import datetime,timezone
 root=Path(__file__).resolve().parents[1]
 BASE='e1397a26049e624d98daa0b20159526e045f6076'
 spec=importlib.util.spec_from_file_location('cv',root/'Tools/cloud-validation.py');cv=importlib.util.module_from_spec(spec);spec.loader.exec_module(cv)
-output=root/'Docs/Validation/AndroidSource/Evidence';output.mkdir(parents=True,exist_ok=True)
+output=root/'Docs/Validation/AndroidSource/ReviewFix/Evidence';output.mkdir(parents=True,exist_ok=True)
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def inputs():
  paths=set()
@@ -14,7 +14,7 @@ def inputs():
   paths.update(p for p in (root/folder).rglob('*') if p.is_file())
  for folder in ['Tests','Tools']:
   paths.update(p for p in (root/folder).rglob('*') if p.is_file() and p.suffix in ['.py','.cs','.sh'] and 'TestResults' not in p.parts and 'ReferenceAssemblies' not in p.parts)
- paths.update(root/p for p in ['.gitignore','README.md','Docs/Android.md','Docs/Validation/AndroidSource/source-baseline.json'])
+ paths.update(root/p for p in ['.gitignore','README.md','Docs/Android.md','Docs/Validation/AndroidSource/source-baseline.json','Docs/Validation/AndroidSource/ReviewFix/provenance.json','Docs/Validation/AndroidSource/ReviewFix/verify-evidence.py','Docs/Validation/AndroidSource/ReviewFix/README.md'])
  return {str(p.relative_to(root)):sha(p) for p in sorted(paths)}
 initial=inputs();report={'baseline':BASE,'startedUtc':datetime.now(timezone.utc).isoformat(),'checks':[],'sourceSha256':initial,'scope':'Full source inventory and targeted managed Android checks; no real Unity import/build, IL2CPP, Gradle, APK or device execution.'}
 def record(name,body):
@@ -24,7 +24,7 @@ def record(name,body):
  log.write_text(str(message)+'\n');report['checks'].append({'name':name,'passed':ok,'log':log.name});print(('PASS ' if ok else 'FAIL ')+name,flush=True)
 def inventory():
  baseline=json.loads((root/'Docs/Validation/AndroidSource/source-baseline.json').read_text());assert baseline['commit']==BASE
- entries=baseline['gitBlobSha1'];excluded=set(baseline['excludedNonRuntimeVideos']);changed={'.gitignore','README.md','Assets/Editor/ProjectTools.cs','ProjectSettings/ProjectSettings.asset'};matched=0
+ entries=baseline['gitBlobSha1'];excluded=set(baseline['excludedNonRuntimeVideos']);changed={'.gitignore','README.md','Assets/Editor/ProjectTools.cs','ProjectSettings/ProjectSettings.asset','Assets/Editor/GroundLootValidation.cs'};matched=0
  for name,oid in entries.items():
   p=root/name
   if name in excluded:assert not p.exists(),name;continue
@@ -38,7 +38,7 @@ def inventory():
  runtime={str(p.relative_to(root)) for p in (root/'Assets/Scripts').rglob('*') if p.is_file()};sourceRuntime={n for n in entries if n.startswith('Assets/Scripts/')};assert runtime==sourceRuntime,'runtime additions/deletions'
  assert 'm_EditorVersion: 6000.6.3f1' in (root/'ProjectSettings/ProjectVersion.txt').read_text()
  for name in ['Assets/Scenes/Main.unity','Assets/Scenes/Main.unity.meta','Packages/manifest.json','Packages/packages-lock.json','Assets/Editor/AndroidBuild.cs','Assets/Editor/AndroidBuild.cs.meta']:assert (root/name).is_file(),name
- newAllowed={'Assets/Editor/AndroidBuild.cs','Assets/Editor/AndroidBuild.cs.meta','Tests/AndroidBuildBoundaryTests.cs','Tests/AndroidBuildBoundaryTests.py','Tools/Build-Android.sh','Tools/validate-android-source.py','Docs/Android.md'}
+ newAllowed={'Tests/AndroidResourceBoundaryTests.py','Tests/EditorAssemblyBoundaryTests.py','Assets/Resources/Fonts/NotoSansSC-Regular.otf','Assets/Resources/Fonts/NotoSansSC-Regular.otf.meta','Assets/Resources/Fonts/LICENSE.txt','Assets/Resources/Fonts/LICENSE.txt.meta','Assets/Editor/AndroidBuild.cs','Assets/Editor/AndroidBuild.cs.meta','Tests/AndroidBuildBoundaryTests.cs','Tests/AndroidBuildBoundaryTests.py','Tools/Build-Android.sh','Tools/validate-android-source.py','Docs/Android.md'}
  tracked=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=root,text=True).rstrip('\0').split('\0')
  forbidden={'.apk','.aab','.apks','.keystore','.jks','.pfx','.p12','.mp4','.mov','.webm','.unitypackage'}
  for name in tracked:
@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory(prefix='android-source-validation-') as tmp:
  for name,files,cls,defines in cases:
   proj=cv.write_project(p/name,[root/f for f in files],'using System;class Program{static void Main(){Console.WriteLine('+cls+'.Run());}}',defines=defines)
   cv.run_check(name,[[sdk,'run','--project',str(proj)]],env,output,report)
- for name,script in [('android-build-entry','AndroidBuildBoundaryTests.py'),('android-lifecycle-source','AndroidLifecycleSourceTests.py'),('production-touch-lifecycle','ProductionTouchLifecycleTests.py'),('mobile-pause-transition','MobilePauseTransitionProductionTests.py'),('mobile-inventory-back','MobileInventoryBackProductionTests.py'),('mobile-opportunity-input','MobileOpportunityInputProductionTests.py')]:cv.run_check(name,[[sys.executable,str(root/'Tests'/script),sdk]],env,output,report)
+ for name,script in [('real-font-resource','AndroidResourceBoundaryTests.py'),('editor-assembly-boundary','EditorAssemblyBoundaryTests.py'),('android-build-entry','AndroidBuildBoundaryTests.py'),('android-lifecycle-source','AndroidLifecycleSourceTests.py'),('production-touch-lifecycle','ProductionTouchLifecycleTests.py'),('mobile-pause-transition','MobilePauseTransitionProductionTests.py'),('mobile-inventory-back','MobileInventoryBackProductionTests.py'),('mobile-opportunity-input','MobileOpportunityInputProductionTests.py')]:cv.run_check(name,[[sys.executable,str(root/'Tests'/script),sdk]],env,output,report)
  proj=cv.write_project(p/'android-runtime-compile',sorted((root/'Assets/Scripts').rglob('*.cs')),references=list(cv.unity_references(False).glob('*.dll')),defines='UNITY_ANDROID')
  cv.run_check('android-runtime-compile',[[sdk,'build',str(proj),'--configuration','Release','--verbosity','minimal']],env,output,report)
 final=inputs();report['sourceChangedDuringRun']=[n for n in initial.keys()|final.keys() if initial.get(n)!=final.get(n)];report['completedUtc']=datetime.now(timezone.utc).isoformat();report['passed']=all(c['passed'] for c in report['checks']) and not report['sourceChangedDuringRun'];(output/'report.json').write_text(json.dumps(report,indent=2)+'\n');print('Android source checks:',report['passed'],len(report['checks']),flush=True);sys.exit(0 if report['passed'] else 1)

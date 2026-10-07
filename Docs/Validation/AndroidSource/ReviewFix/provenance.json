@@ -1,0 +1,31 @@
+{
+  "sourceRepository": "https://github.com/h644782259/emberfall_ios",
+  "sourceCommit": "d8f091cccca54649aa8fe733aa53b1743536aeec",
+  "files": {
+    "Assets/Resources/Fonts/NotoSansSC-Regular.otf": {
+      "gitBlobSha1": "fc0fda9394367c16c1af7555a2ae4d5e2e6a6f02",
+      "sha256": "faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9",
+      "bytes": 8331336
+    },
+    "Assets/Resources/Fonts/NotoSansSC-Regular.otf.meta": {
+      "gitBlobSha1": "c3ef7c0b3e4b68d62f61897c4c396384133087c6",
+      "sha256": "9fe99bd5268f2cf6ac7a41c35bb342b334535bfdb06e74743648a13cde6bc8f4",
+      "bytes": 497
+    },
+    "Assets/Resources/Fonts/LICENSE.txt": {
+      "gitBlobSha1": "d952d62c065f3f35fb83a173496e90b21525aef3",
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2",
+      "bytes": 4301
+    },
+    "Assets/Resources/Fonts/LICENSE.txt.meta": {
+      "gitBlobSha1": "a6db1ca5b5dad3293e583570d54bc619e6daa352",
+      "sha256": "1d7df2c0b0e74e39e9e7c66713cfc826121bb1e1f684adc78ed81d7bafb7a1c6",
+      "bytes": 158
+    },
+    "Assets/Editor/GroundLootValidation.cs": {
+      "gitBlobSha1": "a1cf22f4f5673703a84819cfb7ef0fd50e679646",
+      "sha256": "016a78ceb310e33eec6c21065571b754e45ae0a6ee69f315eea1ed7388293250",
+      "bytes": 25729
+    }
+  }
+}
