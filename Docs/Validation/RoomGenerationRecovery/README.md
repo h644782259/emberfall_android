@@ -25,6 +25,10 @@ Required native follow-up: tier 15 limited healing, direct Seal versus optional 
 
 ## Initial full run (diagnostic only)
 
-286 checks: 286 passed, 0 failed. Source changed while this initial suite ran, so it is not a frozen acceptance result. `initial-full/report.json` preserves its source hashes and changed-file list. A final full run is in progress on the committed source.
+286 checks: 286 passed, 0 failed. Source changed while this initial suite ran, so it is not a frozen acceptance result. `initial-full/report.json` preserves its source hashes and changed-file list. The final frozen result is recorded below.
 
 All initial Android checks passed; the source-change warning still requires the frozen rerun.
+
+## Frozen full validation
+
+Completed 2026-10-07T11:12:26.125202+00:00: **286/286 passed**, 0 failed; `sourceChangedDuringRun` is empty. Every final failure matches the archived main baseline: **True**. See `frozen-full/report.json` and `frozen-full/baseline-comparison.json`. This remains managed/reference-API evidence, not Unity/native/device acceptance.
