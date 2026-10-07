@@ -22,3 +22,9 @@ DOTNET=/path/to/dotnet python3 Tests/SideEventProductionTests.py
 Expected exception output in negative controls is intentional; the runner requires the specific assertion, not a compilation error. Full managed suites were also started and have failures; they are not certified green. The reference compile uses pinned UnityEngine 2021.3.33 APIs, not the project's Unity 6000.6.3f1 editor/native toolchain.
 
 Required native follow-up: tier 15 limited healing, direct Seal versus optional crystal then Seal; live/cleared/repeated/cancelled/retried entry, both mirror layouts, and actual enemy/art construction. Capture the new stage and Unity exception stack for any remaining failure. Draft only; independent review and native verification are still outstanding.
+
+## Initial full run (diagnostic only)
+
+286 checks: 286 passed, 0 failed. Source changed while this initial suite ran, so it is not a frozen acceptance result. `initial-full/report.json` preserves its source hashes and changed-file list. A final full run is in progress on the committed source.
+
+All initial Android checks passed; the source-change warning still requires the frozen rerun.
